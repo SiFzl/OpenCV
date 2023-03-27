@@ -13,7 +13,7 @@ blur = cv2.GaussianBlur(gray, (5, 5), 0)
 # Apply Canny edge detection
 edges = cv2.Canny(blur, 50, 150, apertureSize=3)
 
-# Find contours in the edge map
+# Find contours
 contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
 # Sort the contours by area
