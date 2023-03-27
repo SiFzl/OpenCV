@@ -16,15 +16,15 @@ edges = cv2.Canny(blur, 50, 150, apertureSize=3)
 # Find contours in the edge map
 contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-# Sort the contours by area, in descending order
+# Sort the contours by area
 contours = sorted(contours, key=cv2.contourArea, reverse=True)
 
 # Find the largest rectangular contour
 largest_contour = None
 for contour in contours:
-    # Approximate the contour as a polygon with fewer vertices
+    
     polygon = cv2.approxPolyDP(contour, 0.02 * cv2.arcLength(contour, True), True)
-    # Check if the polygon has four vertices (a rectangle)
+    # Check if the polygon (Chand Zelei) has four vertices (Raas) (Like a rectangle)
     if len(polygon) == 4:
         largest_contour = polygon
         break
