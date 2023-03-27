@@ -7,34 +7,45 @@ img = cv2.imread('/Users/sina.fazel/Desktop/Python/Project/test1-2.png')
 # Convert image to HSV color space
 hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
-# Define range of orange color in HSV
-lower_orange = np.array([0, 50, 50])
-upper_orange = np.array([20, 255, 255])
+# Define lower and upper range of orange color in HSV
+lower_orange = np.array([10, 100, 20])
+upper_orange = np.array([25, 255, 255])
 
-# Threshold the image to get only orange colors
+# Threshold the image to get only orange regions
 mask = cv2.inRange(hsv, lower_orange, upper_orange)
 
-# Find contours in the thresholded image
-contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+# Apply a Gaussian blur to reduce noise
+blur = cv2.GaussianBlur(mask, (5, 5), 0)
 
-# Sort contours by area, in descending order
+# Apply Canny edge detection
+edges = cv2.Canny(blur, 50, 150, apertureSize=3)
+
+# Find contours in the edge map
+contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+# Sort the contours by area, in descending order
 contours = sorted(contours, key=cv2.contourArea, reverse=True)
 
-# Find the center of the largest contour (i.e. the orange rectangle)
-if contours:
-    rect = cv2.minAreaRect(contours[0])
-    box = cv2.boxPoints(rect)
-    box = np.int0(box)
-    center = np.mean(box, axis=0, dtype=np.int0)
+# Find the largest rectangular contour
+largest_contour = None
+for contour in contours:
+    # Approximate the contour as a polygon with fewer vertices
+    polygon = cv2.approxPolyDP(contour, 0.02 * cv2.arcLength(contour, True), True)
+    # Check if the polygon has four vertices (a rectangle)
+    if len(polygon) == 4:
+        largest_contour = polygon
+        break
 
-    # Draw a circle at the center of the orange rectangle
-    cv2.circle(img, tuple(center), 5, (0, 255, 0), -1)
+# Draw a circle around the center of the rectangular contour
+if largest_contour is not None:
+    M = cv2.moments(largest_contour)
+    center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
+    cv2.circle(img, center, 5, (0, 0, 255), -1)
 
-    # Draw a corresponding contour around the orange rectangle
-    cv2.drawContours(img, [box], 0, (0, 0, 255), 2)
+# Draw the contour on the original image
+cv2.drawContours(img, [largest_contour], 0, (0, 255, 0), 3)
 
-# Display output image
-cv2.imshow('Output', img)
+# Show the result
+cv2.imshow('Result', img)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
-
