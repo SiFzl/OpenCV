@@ -14,8 +14,14 @@ upper = np.array([180, 255, 255])
 # Threshold the image for only red-purple colors
 mask = cv2.inRange(hsv, lower, upper)
 
+# Apply a Gaussian blur to reduce noise
+blur = cv2.GaussianBlur(mask, (5, 5), 0)
+
+# Apply Canny edge detection
+edges = cv2.Canny(blur, 50, 150, apertureSize=3)
+
 # Find contours in the mask image
-contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
 # Draw contours around the gates
 img_contours = img.copy()
