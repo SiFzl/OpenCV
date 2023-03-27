@@ -1,35 +1,44 @@
 import cv2
 import numpy as np
 
-# read the image
+# Load image
 img = cv2.imread('/Users/sina.fazel/Desktop/Python/Project/test1-1.png')
 
-# convert to grayscale
+# Convert image to grayscale
 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-# apply threshold to get binary image
-_, thresh = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
+# Apply a Gaussian blur to reduce noise
+blur = cv2.GaussianBlur(gray, (5, 5), 0)
 
-# find contours
-contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+# Apply Canny edge detection
+edges = cv2.Canny(blur, 50, 150, apertureSize=3)
 
-# find the largest contour
-largest_contour = max(contours, key=cv2.contourArea)
+# Find contours in the edge map
+contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-# draw the largest contour
+# Sort the contours by area, in descending order
+contours = sorted(contours, key=cv2.contourArea, reverse=True)
+
+# Find the largest rectangular contour
+largest_contour = None
+for contour in contours:
+    # Approximate the contour as a polygon with fewer vertices
+    polygon = cv2.approxPolyDP(contour, 0.02 * cv2.arcLength(contour, True), True)
+    # Check if the polygon has four vertices (a rectangle)
+    if len(polygon) == 4:
+        largest_contour = polygon
+        break
+
+# Draw a circle around the center of the rectangular contour
+if largest_contour is not None:
+    M = cv2.moments(largest_contour)
+    center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
+    cv2.circle(img, center, 5, (0, 0, 255), -1)
+
+# Draw the contour on the original image
 cv2.drawContours(img, [largest_contour], 0, (0, 255, 0), 3)
 
-# find the moments of the largest contour
-M = cv2.moments(largest_contour)
-
-# calculate the center of the contour
-center_x = int(M['m10']/M['m00'])
-center_y = int(M['m01']/M['m00'])
-
-# draw a circle at the center of the contour
-cv2.circle(img, (center_x, center_y), 5, (0, 0, 255), -1)
-
-# display the output image
-cv2.imshow('output', img)
+# Show the result
+cv2.imshow('Result', img)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
